@@ -1,0 +1,62 @@
+version: '3'
+
+services:
+
+  flask-service1:
+
+    build:
+
+      context: ./flask
+
+    image: flask-service
+
+    environment:
+
+      - FLASK_APP=app.py
+
+    expose:
+
+      - "5000"
+
+    networks:
+
+      - net
+
+    labels:
+
+      - "traefik.http.routers.flask.rule=Host(`localhost`)"
+
+
+  reverse-proxy:
+
+    image: traefik:v2.2
+
+    # Enables the web UI and tells Traefik to listen to docker
+
+    command: --api.insecure=true --providers.docker
+
+    volumes:
+
+      # So that Traefik can listen to the Docker events
+
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    ports:
+
+      - "80:80"
+
+      # The Web UI (enabled by --api.insecure=true)
+
+      - "8080:8080"
+
+    networks:
+
+      - net
+
+    depends_on:
+
+      - flask-service1
+
+networks:
+  net:
+    driver: bridge
